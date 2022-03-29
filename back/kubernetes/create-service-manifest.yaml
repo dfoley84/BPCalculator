@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bp-deployment
+  labels:
+    app: bp
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      app: bp 
+  template:
+    metadata:
+      labels:
+        app: bp
+    spec:
+      containers:
+      - name: bp
+        image: gcr.io//backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bp-service
+  annotations:
+    networking.gke.io/load-balancer-type: "Internal"
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: bp
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: bp-deployment
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    name: bp-deployment
+    kind: Deployment
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 50

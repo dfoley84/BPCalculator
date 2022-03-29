@@ -1,0 +1,23 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: frontend-canary
+spec:
+  hosts:
+    - ..tk
+  gateways:
+    - frontend-gateway
+  http:
+  - route:
+    - destination:
+        host: node
+        subset: v1
+        port:
+          number: 22137
+      weight: 65
+    - destination:
+        host: node
+        subset: v2
+        port:
+          number: 22137
+      weight: 35
